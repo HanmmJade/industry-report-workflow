@@ -357,10 +357,41 @@ industry-report-workflow/
 
 ---
 
+## 📌 在线体验 | Live Demo
+
+> 🤖 **Coze Bot 在线体验**：[点击体验行业月报助手](https://www.coze.cn/s/xxxxx)
+>
+> 在 Bot 中输入如"帮我搜集2026年3月光伏行业数据"，即可体验完整工作流。
+
+---
+
+## 🧭 面试官指南 | For Interviewers
+
+如果这是你第一次看这个项目，建议按以下顺序浏览：
+
+| 顺序 | 文件 | 看什么 |
+|------|------|--------|
+| 1️⃣ | 本 README | 项目全貌、架构图、核心设计思想 |
+| 2️⃣ | `docs/ARCHITECTURE.md` | 系统架构设计的深度思考 |
+| 3️⃣ | `prompts/01~05` | Prompt 工程能力（结构化、约束、分级逻辑） |
+| 4️⃣ | `rules/credibility_rules.json` | 可信度分级的规则引擎设计 |
+| 5️⃣ | `rules/data_sources.json` | 数据源配置的工程化思维 |
+| 6️⃣ | `output/example_output.md` | 实际输出效果 |
+| 7️⃣ | `coze/system-prompt.md` | 完整的 Bot System Prompt |
+
+### 这个项目展示了什么能力？
+
+- **数据严谨性意识**：投资行业的生命线——宁可标注"待验证"也不编造
+- **Prompt 工程能力**：5阶段结构化 Prompt、约束规则、输出格式化
+- **AI Agent 设计**：从需求理解到数据校验的完整工作流编排
+- **工程化思维**：规则与模板分离、数据源可配置、可信度可量化
+
+---
+
 ## 📞 联系方式
 
-- **Issue**: https://github.com/your-org/industry-report-workflow/issues
-- **Email**: your.email@example.com
+- **Issue**: https://github.com/HanmmJade/industry-report-workflow/issues
+- **Email**: 572757103@qq.com
 
 ---
 
