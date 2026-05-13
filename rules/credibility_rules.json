@@ -1,0 +1,334 @@
+{
+  "description": "可信度评估规则配置",
+  "version": "1.0.0",
+  "last_updated": "2026-05-01",
+  
+  "grade_definitions": {
+    "A": {
+      "name": "高可信",
+      "color": "🟢",
+      "criteria": [
+        "官方来源（政府/行业协会/顶级期刊/交易所）",
+        "至少一个第三方交叉验证",
+        "时间一致性符合要求（发布日期在数据周期之后）",
+        "无数据冲突或冲突已解决"
+      ],
+      "weight": 1.0,
+      "typical_sources": [
+        "国家能源局",
+        "国家统计局",
+        "中国汽车工业协会",
+        "中国汽车动力电池产业创新联盟",
+        "BNEF",
+        "IEA PVPS",
+        "SNE Research",
+        "Nature/Science期刊"
+      ]
+    },
+    "B": {
+      "name": "较可信",
+      "color": "🔵",
+      "criteria": [
+        "权威机构单来源",
+        "或A级来源但无交叉验证",
+        "时间一致性符合要求"
+      ],
+      "weight": 0.75,
+      "typical_sources": [
+        "InfoLink",
+        "Mysteel",
+        "EVtank",
+        "大东时代智库",
+        "权威财经媒体（财联社、界面）",
+        "券商研究报告"
+      ]
+    },
+    "C": {
+      "name": "待验证",
+      "color": "🟡",
+      "criteria": [
+        "行业媒体单来源",
+        "或数据存在轻微不确定性",
+        "无法找到交叉验证来源"
+      ],
+      "weight": 0.5,
+      "typical_sources": [
+        "普通行业媒体",
+        "公众号",
+        "专家博客"
+      ]
+    },
+    "D": {
+      "name": "存疑",
+      "color": "🔴",
+      "criteria": [
+        "来源不明",
+        "数据严重冲突（差异>10%且无法判断）",
+        "传闻性质",
+        "发现数据错误"
+      ],
+      "weight": 0.25,
+      "typical_sources": [
+        "来源不明",
+        "传闻"
+      ]
+    }
+  },
+  
+  "cross_validation_rules": {
+    "enabled": true,
+    "multi_source_bonus": 0.25,
+    "conflict_penalty": 0.5,
+    "threshold_percent": 10,
+    
+    "upgrade_conditions": [
+      {
+        "condition": "同指标2个及以上A级来源验证一致",
+        "action": "升级至A级",
+        "example": "国家能源局数据 + 银河证券研报引用"
+      },
+      {
+        "condition": "同指标1个A级来源验证",
+        "action": "保持原评级（B级升A需额外验证）",
+        "example": "国家能源局数据"
+      },
+      {
+        "condition": "C级 + 1个B级或A级验证",
+        "action": "升级至B级",
+        "example": "媒体报道 + 上市公司公告"
+      }
+    ],
+    
+    "degrade_conditions": [
+      {
+        "condition": "多源数据差异>10%且无法判断",
+        "action": "降级至D级",
+        "example": "InfoLink(47GW) vs Mysteel(39GW)差异19.5%"
+      },
+      {
+        "condition": "发现预测值误标为实际值",
+        "action": "降级至C级并强制标注",
+        "example": "Mysteel 3月10日预测值标注为3月实际值"
+      },
+      {
+        "condition": "发布时间异常",
+        "action": "根据情况降级",
+        "example": "3月10日发布的文章作为3月全月数据"
+      }
+    ]
+  },
+  
+  "time_consistency_rules": {
+    "enabled": true,
+    "strict_mode": false,
+    
+    "monthly_data": {
+      "description": "月度数据",
+      "rule": "发布日期需在月末之后",
+      "example": "3月数据 → 最早4月发布",
+      "violation_action": "降级处理 + 标注⚠️时间异常"
+    },
+    
+    "quarterly_data": {
+      "description": "季度数据",
+      "rule": "发布日期需在季度末之后",
+      "example": "Q1数据 → 最早4月发布",
+      "violation_action": "降级处理 + 标注⚠️时间异常"
+    },
+    
+    "yearly_data": {
+      "description": "年度数据",
+      "rule": "发布日期需在年度之后",
+      "example": "2025年数据 → 最早2026年发布",
+      "violation_action": "降级处理 + 标注⚠️时间异常"
+    }
+  },
+  
+  "forecast_detection_rules": {
+    "enabled": true,
+    
+    "forecast_keywords": [
+      "预计",
+      "预期",
+      "预测",
+      "估计",
+      "forecast",
+      "prediction",
+      "expected",
+      "outlook",
+      "prospect"
+    ],
+    
+    "actual_keywords": [
+      "实际",
+      "统计",
+      "累计",
+      "实际值",
+      "actual",
+      "recorded",
+      "reported"
+    ],
+    
+    "detection_logic": {
+      "date_based": {
+        "description": "基于发布日期判断",
+        "forecast": "发布日期早于或等于数据周期",
+        "actual": "发布日期晚于数据周期"
+      },
+      "value_based": {
+        "description": "基于数值特征判断",
+        "forecast": "整数、较整的数值",
+        "actual": "小数点后1-2位"
+      }
+    },
+    
+    "enforcement": {
+      "unlabeled_forecast": "必须强制标注⚠️预测值",
+      "required_fields": [
+        "原始来源",
+        "发布时间",
+        "预测针对的时间段"
+      ]
+    }
+  },
+  
+  "conflict_detection_rules": {
+    "enabled": true,
+    
+    "numerical_conflict": {
+      "description": "数值冲突",
+      "threshold_percent": 10,
+      "detection_formula": "|value1 - value2| / max(value1, value2) > 0.1"
+    },
+    
+    "trend_conflict": {
+      "description": "趋势冲突",
+      "detection": "同比/环比方向相反",
+      "example": "来源1显示+10%，来源2显示-5%"
+    },
+    
+    "definition_conflict": {
+      "description": "口径冲突",
+      "detection": "统计定义不一致",
+      "example": "出货量 vs 装车量"
+    },
+    
+    "handling": {
+      "conflict_recorded": true,
+      "all_sources_preserved": true,
+      "recommended_action": true,
+      "grade_adjustment": "降级至D级并详细说明冲突原因"
+    }
+  },
+  
+  "missing_data_rules": {
+    "no_fabrication": true,
+    
+    "missing_handling": {
+      "complete_missing": {
+        "label": "⚠️暂未找到权威数据，需人工复核",
+        "grade": "C",
+        "action": "不编造数据，提供可查阅建议"
+      },
+      "partial_missing": {
+        "label": "⚠️部分数据暂未获取",
+        "grade": "C",
+        "action": "如实列出已有数据"
+      },
+      "url_missing": {
+        "label": "⚠️暂未找到具体URL",
+        "grade": "B",
+        "action": "保留来源名称，标注链接缺失"
+      }
+    }
+  },
+  
+  "url_validation_rules": {
+    "enabled": true,
+    
+    "accessible": {
+      "status": "✅可访问",
+      "action": "正常输出"
+    },
+    
+    "pdf_link": {
+      "status": "⚠️PDF下载链接",
+      "action": "优先替换为在线页面，无法替换则标注",
+      "alternative": "搜索引用该PDF的在线文章"
+    },
+    
+    "invalid": {
+      "status": "❌链接失效",
+      "action": "标注⚠️原链接已失效，尝试搜索备用链接",
+      "fallback": "标注来源名称供手动搜索"
+    },
+    
+    "login_required": {
+      "status": "🔐需登录",
+      "action": "标注'需登录查看'",
+      "note": "部分信息可能无法获取"
+    }
+  },
+  
+  "output_format": {
+    "summary_template": {
+      "total_items": "数据总条目数",
+      "grade_distribution": {
+        "A": {"count": 0, "percentage": 0},
+        "B": {"count": 0, "percentage": 0},
+        "C": {"count": 0, "percentage": 0},
+        "D": {"count": 0, "percentage": 0}
+      },
+      "target_achievement": {
+        "A_ratio": "A级占比目标≥70%",
+        "status": "达标/未达标"
+      }
+    },
+    
+    "detail_template": {
+      "per_item": {
+        "indicator": "指标名称",
+        "value": "数值",
+        "source": "来源",
+        "grade": "可信度等级",
+        "grade_reason": "定级理由",
+        "validation_notes": "校验备注"
+      }
+    }
+  },
+  
+  "examples": {
+    "grade_A": {
+      "indicator": "光伏电池装机量",
+      "value": "891万kW",
+      "source": "国家能源局",
+      "cross_validation": "银河证券研报",
+      "grade": "A",
+      "reason": "官方数据+第三方交叉验证一致"
+    },
+    "grade_B": {
+      "indicator": "光伏组件排产量",
+      "value": "~47GW",
+      "source": "InfoLink",
+      "cross_validation": "无",
+      "grade": "B",
+      "reason": "权威咨询机构单来源，无交叉验证"
+    },
+    "grade_C": {
+      "indicator": "行业传闻",
+      "value": "约20亿元",
+      "source": "公众号",
+      "cross_validation": "无",
+      "grade": "C",
+      "reason": "行业媒体单来源，无法验证"
+    },
+    "grade_D": {
+      "indicator": "全球渗透率",
+      "value": "多源冲突",
+      "source": "IEA vs EVtank",
+      "cross_validation": "口径不一致",
+      "grade": "D",
+      "reason": "多源数据严重冲突，无法判断"
+    }
+  }
+}

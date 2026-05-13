@@ -1,0 +1,314 @@
+{
+  "description": "行业数据源配置 - 按行业和来源类型分类",
+  "version": "1.0.0",
+  "last_updated": "2026-05-01",
+  
+  "domestic": {
+    "光伏": [
+      {
+        "name": "国家能源局",
+        "type": "历史数据",
+        "url_pattern": "nea.gov.cn",
+        "credibility": "A",
+        "notes": "官方统计数据，权威性最高"
+      },
+      {
+        "name": "国家统计局",
+        "type": "历史数据",
+        "url_pattern": "stats.gov.cn",
+        "credibility": "A",
+        "notes": "官方统计数据"
+      },
+      {
+        "name": "CPIA中国光伏行业协会",
+        "type": "历史数据",
+        "url_pattern": "china-pv.org.cn",
+        "credibility": "A",
+        "notes": "行业白皮书数据"
+      },
+      {
+        "name": "InfoLink Consulting",
+        "type": "预测值/实际值",
+        "url_pattern": "infolink.com",
+        "credibility": "B",
+        "notes": "需注意区分预测值与实际值"
+      },
+      {
+        "name": "Mysteel我的钢铁网",
+        "type": "预测值/实际值",
+        "url_pattern": "mysteel.net",
+        "credibility": "B",
+        "notes": "行业咨询机构，需注意发布日期"
+      },
+      {
+        "name": "数字新能源DNE",
+        "type": "历史数据",
+        "url_pattern": "solarbe.com",
+        "credibility": "B",
+        "notes": "行业数据跟踪"
+      }
+    ],
+    
+    "锂电": [
+      {
+        "name": "中国汽车动力电池产业创新联盟(CABIA)",
+        "type": "历史数据",
+        "url_pattern": "cbcie.com",
+        "credibility": "A",
+        "notes": "官方月度统计数据"
+      },
+      {
+        "name": "中国汽车工业协会(CAAM)",
+        "type": "历史数据",
+        "url_pattern": "caam.org.cn",
+        "credibility": "A",
+        "notes": "官方统计数据"
+      },
+      {
+        "name": "乘联会(CPCA)",
+        "type": "历史数据",
+        "url_pattern": "cpcaauto.com",
+        "credibility": "A",
+        "notes": "狭义乘用车零售口径"
+      },
+      {
+        "name": "大东时代智库TD",
+        "type": "预测值",
+        "url_pattern": "100ppi.com",
+        "credibility": "B",
+        "notes": "排产预测数据，需标注为预测值"
+      },
+      {
+        "name": "ICC鑫椤资讯",
+        "type": "历史数据",
+        "url_pattern": "iccvex.com",
+        "credibility": "B",
+        "notes": "锂电池行业数据"
+      }
+    ],
+    
+    "新能源汽车": [
+      {
+        "name": "中国汽车工业协会(CAAM)",
+        "type": "历史数据",
+        "url_pattern": "caam.org.cn",
+        "credibility": "A",
+        "notes": "官方统计数据，含商用车"
+      },
+      {
+        "name": "乘联会(CPCA)",
+        "type": "历史数据",
+        "url_pattern": "cpcaauto.com",
+        "credibility": "A",
+        "notes": "狭义乘用车零售口径"
+      },
+      {
+        "name": "工信部装备工业一司",
+        "type": "历史数据",
+        "url_pattern": "miit.gov.cn",
+        "credibility": "A",
+        "notes": "官方统计数据"
+      },
+      {
+        "name": "交强险数据",
+        "type": "历史数据",
+        "url_pattern": "insurance.gov.cn",
+        "credibility": "B",
+        "notes": "零售上险口径"
+      }
+    ]
+  },
+  
+  "global": {
+    "光伏": [
+      {
+        "name": "BNEF(BloombergNEF)",
+        "type": "预测值/历史数据",
+        "url_pattern": "bloombergnef.com",
+        "credibility": "A",
+        "notes": "全球光伏装机预测权威"
+      },
+      {
+        "name": "IEA PVPS",
+        "type": "预测值/历史数据",
+        "url_pattern": "iea-pvps.org",
+        "credibility": "A",
+        "notes": "国际能源署光伏项目"
+      },
+      {
+        "name": "Ember智库",
+        "type": "历史数据",
+        "url_pattern": "ember-climate.org",
+        "credibility": "A",
+        "notes": "全球电力数据"
+      },
+      {
+        "name": "CPIA",
+        "type": "历史数据",
+        "url_pattern": "china-pv.org.cn",
+        "credibility": "A",
+        "notes": "中国光伏产业数据"
+      },
+      {
+        "name": "PV Magazine",
+        "type": "预测值/历史数据",
+        "url_pattern": "pv-magazine.com",
+        "credibility": "B",
+        "notes": "行业新闻与分析"
+      }
+    ],
+    
+    "锂电": [
+      {
+        "name": "SNE Research",
+        "type": "历史数据",
+        "url_pattern": "sneresearch.com",
+        "credibility": "A",
+        "notes": "全球动力电池装车量"
+      },
+      {
+        "name": "EVtank",
+        "type": "历史数据",
+        "url_pattern": "evtank.cn",
+        "credibility": "A",
+        "notes": "全球锂电白皮书"
+      },
+      {
+        "name": "Benchmark Minerals",
+        "type": "预测值/历史数据",
+        "url_pattern": "benchmarkminerals.com",
+        "credibility": "A",
+        "notes": "电池原材料数据"
+      },
+      {
+        "name": "GGII高工产业研究院",
+        "type": "历史数据",
+        "url_pattern": "gg-lb.com",
+        "credibility": "B",
+        "notes": "中国锂电池数据"
+      }
+    ],
+    
+    "新能源汽车": [
+      {
+        "name": "IEA国际能源署",
+        "type": "预测值/历史数据",
+        "url_pattern": "iea.org",
+        "credibility": "A",
+        "notes": "全球新能源展望，需注意区分预测值"
+      },
+      {
+        "name": "EV Sales统计",
+        "type": "历史数据",
+        "url_pattern": "ev-sales.blogspot.com",
+        "credibility": "B",
+        "notes": "全球新能源车销量统计"
+      },
+      {
+        "name": "MarkLines",
+        "type": "历史数据",
+        "url_pattern": "marklines.com",
+        "credibility": "A",
+        "notes": "全球汽车生产统计"
+      },
+      {
+        "name": "OICA国际汽车制造商协会",
+        "type": "历史数据",
+        "url_pattern": "oica.net",
+        "credibility": "B",
+        "notes": "工厂发货口径，与零售口径不同"
+      }
+    ]
+  },
+  
+  "sources_by_credibility": {
+    "A": [
+      "政府官方机构（国家能源局、国家统计局等）",
+      "行业协会官方发布（CABIA、CAAM、CPIA等）",
+      "国际权威机构（BNEF、IEA、SNE Research等）",
+      "顶级学术期刊（Nature、Science等）",
+      "交易所官方信息（上交所、港交所等）",
+      "上市公司公告（经审计）"
+    ],
+    "B": [
+      "权威咨询机构（InfoLink、Mysteel等）",
+      "券商研究报告（中信证券、国泰君安等）",
+      "权威财经媒体（财联社、界面新闻等）",
+      "行业权威媒体（激光制造网、Ofweek等）"
+    ],
+    "C": [
+      "普通行业媒体",
+      "公众号、自媒体",
+      "专家博客"
+    ],
+    "D": [
+      "来源不明",
+      "传闻信息",
+      "无法验证的数据"
+    ]
+  },
+  
+  "data_type_definitions": {
+    "历史数据": {
+      "description": "基于实际发生的统计数据",
+      "特征": [
+        "发布日期在数据周期之后",
+        "数据精确到小数",
+        "通常包含'实际/统计/累计'等词"
+      ]
+    },
+    "预测值": {
+      "description": "基于模型或判断的未来预估",
+      "特征": [
+        "发布日期可能在数据周期之中或之前",
+        "通常包含'预计/预期/预测/estimate/forecast'",
+        "数据可能较整"
+      ],
+      "标注要求": "必须显式标注'⚠️预测值'"
+    },
+    "估算值": {
+      "description": "基于部分数据的推算",
+      "特征": [
+        "通常无法找到完整数据来源",
+        "可能使用'约/大概/估计'等词"
+      ],
+      "标注要求": "必须显式标注'⚠️估算值'"
+    }
+  },
+  
+  "credibility_upgrade_rules": [
+    {
+      "from": "B",
+      "to": "A",
+      "condition": "获得2个及以上A级来源验证",
+      "example": "国家能源局数据 + 银河证券研报"
+    },
+    {
+      "from": "C",
+      "to": "B",
+      "condition": "获得1个B级或A级来源验证",
+      "example": "媒体报道 + 上市公司公告确认"
+    }
+  ],
+  
+  "credibility_degrade_rules": [
+    {
+      "from": "A/B",
+      "to": "D",
+      "condition": "多源数据冲突>10%且无法判断",
+      "example": "InfoLink vs Mysteel数据差异20%"
+    },
+    {
+      "from": "A",
+      "to": "C",
+      "condition": "预测值误标为实际值",
+      "example": "Mysteel预测数据标注为实际值"
+    },
+    {
+      "from": "A/B",
+      "to": "B/C",
+      "condition": "发布时间异常",
+      "example": "3月10日发布的文章作为3月实际数据"
+    }
+  ]
+}
