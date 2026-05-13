@@ -138,7 +138,7 @@ sequenceDiagram
    - PDF下载链接需替换为在线可读的网页链接
    - 无法验证的链接需标注"⚠️暂未找到具体URL"
 
-### 📊 可信度分级体系（Credibility Grading System）
+### 📊 可信度分级体系
 
 | 等级 | 定义 | 典型来源 | 占比目标 |
 |------|------|----------|----------|
@@ -192,13 +192,13 @@ src/
 - `detect_conflicts()`: 数据冲突检测
 - `validate_urls()`: URL可访问性验证
 
-#### 3. 分级引擎 (grader.py)
+#### 4. 分级引擎 (grader.py)
 - 基于来源的预评级（A/B/C/D）
 - 交叉验证升级逻辑
 - 校验异常降级逻辑
 - 批量评级统计
 
-#### 4. Pipeline (pipeline.py)
+#### 5. Pipeline (pipeline.py)
 - 5阶段串联：理解需求 → 收集数据 → 校验 → 分级 → 输出
 - 阶段间状态传递
 - 错误处理与恢复
@@ -275,6 +275,8 @@ pip install -r requirements.txt
 ```bash
 python src/main.py --demo
 ```
+
+> 💡 运行 `--demo` 将使用内置示例数据执行完整Pipeline，输出校验+分级结果。无需API key即可体验。
 
 ### 3. CLI模式
 
@@ -379,7 +381,7 @@ industry-report-workflow/
 
 ---
 
-## 十、项目亮点 | Highlights
+## 十、项目亮点
 
 ### 💡 差异化能力
 
