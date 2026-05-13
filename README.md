@@ -359,7 +359,7 @@ industry-report-workflow/
 
 ## 📌 在线体验 | Live Demo
 
-> 🤖 **Coze Bot 在线体验**：[点击体验行业月报助手](https://pxffc5b354.coze.site/stream_run)
+> 🤖 **Coze Bot 在线体验**：[点击体验行业月报助手](https://code.coze.cn/p/7639313952693977130/preview)（需登录Coze账号）
 >
 > 在 Bot 中输入如"帮我搜集2026年3月光伏行业数据"，即可体验完整工作流。
 
