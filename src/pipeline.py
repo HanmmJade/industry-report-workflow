@@ -22,6 +22,7 @@ from data_sources import DataSourceManager
 from validator import DataValidator
 from grader import CredibilityGrader
 from report_generator import ReportGenerator
+from collector import SearchCollector, CollectMode
 
 
 class IndustryReportPipeline:
@@ -36,8 +37,14 @@ class IndustryReportPipeline:
     5. format_output: 生成报告
     """
     
-    def __init__(self):
-        """初始化Pipeline"""
+    def __init__(self, api_key: Optional[str] = None, live_mode: bool = False):
+        """
+        初始化Pipeline
+        
+        Args:
+            api_key: 搜索API密钥，用于真实联网搜集
+            live_mode: 是否使用联网搜集模式（True时优先联网，False则用演示数据）
+        """
         self.source_manager = DataSourceManager()
         self.validator = DataValidator()
         self.grader = CredibilityGrader()
@@ -45,6 +52,12 @@ class IndustryReportPipeline:
         
         # 上下文
         self.context: Optional[PipelineContext] = None
+        
+        # 搜集器配置
+        self._use_live_mode = live_mode
+        self._collector: Optional[SearchCollector] = None
+        if live_mode:
+            self._collector = SearchCollector(api_key=api_key, use_demo_fallback=True)
     
     def understand_requirement(self, query: str) -> Dict[str, Any]:
         """
@@ -123,7 +136,9 @@ class IndustryReportPipeline:
         """
         阶段2：收集数据
         
-        返回模拟数据（实际搜集靠LLM+搜索，这里提供数据标准化接口）
+        根据配置使用真实搜集器或模拟数据：
+        - live_mode=True：优先使用SearchCollector联网搜集，失败则fallback
+        - live_mode=False：直接使用演示数据
         
         Args:
             requirement: 解析后的需求
@@ -140,21 +155,40 @@ class IndustryReportPipeline:
         industry = context.industry
         period = context.time_period
         
-        # 收集国内数据
-        if "domestic" in context.data_types:
-            context.domestic_data = self._collect_domestic_data(industry, period)
-        
-        # 收集国际数据
-        if "global" in context.data_types:
-            context.global_data = self._collect_global_data(industry, period)
-        
-        # 收集竞争对手动态
-        if "competitor" in context.data_types:
-            context.competitor_events = self._collect_competitor_events(industry, period)
-        
-        # 收集行业资讯
-        if "news" in context.data_types:
-            context.industry_news = self._collect_industry_news(industry, period)
+        # 尝试使用真实搜集器（仅在live_mode=True时）
+        if self._collector:
+            collect_results = self._collector.collect_all(industry, period, context.data_types)
+            
+            for dtype, result in collect_results.items():
+                if dtype == "domestic":
+                    context.domestic_data = result.data
+                    if result.mode == CollectMode.DEMO:
+                        print(f"  [提示] 国内数据使用演示模式: {result.error_msg}")
+                elif dtype == "global":
+                    context.global_data = result.data
+                    if result.mode == CollectMode.DEMO:
+                        print(f"  [提示] 国际数据使用演示模式: {result.error_msg}")
+                elif dtype == "competitor":
+                    context.competitor_events = result.data
+                    if result.mode == CollectMode.DEMO:
+                        print(f"  [提示] 竞对动态使用演示模式: {result.error_msg}")
+                elif dtype == "news":
+                    context.industry_news = result.data
+                    if result.mode == CollectMode.DEMO:
+                        print(f"  [提示] 行业资讯使用演示模式: {result.error_msg}")
+        else:
+            # 使用模拟数据
+            if "domestic" in context.data_types:
+                context.domestic_data = self._collect_domestic_data(industry, period)
+            
+            if "global" in context.data_types:
+                context.global_data = self._collect_global_data(industry, period)
+            
+            if "competitor" in context.data_types:
+                context.competitor_events = self._collect_competitor_events(industry, period)
+            
+            if "news" in context.data_types:
+                context.industry_news = self._collect_industry_news(industry, period)
         
         context.set_stage_success("collect_data")
         return context

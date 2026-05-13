@@ -180,7 +180,13 @@ src/
 - `GradingResult`: 评级结果
 - `PipelineContext`: Pipeline执行上下文
 
-#### 2. 校验引擎 (validator.py)
+#### 2. 数据搜集器 (collector.py)
+- `SearchCollector`: 搜索数据搜集器类
+- 支持联网搜集和演示数据fallback模式
+- 根据行业和周期自动生成搜索关键词
+- 返回标准化的数据对象
+
+#### 3. 校验引擎 (validator.py)
 - `check_time_consistency()`: 时间一致性检查
 - `check_forecast_flag()`: 预测值标注检测
 - `detect_conflicts()`: 数据冲突检测
@@ -281,6 +287,9 @@ python src/main.py --industry 锂电 --period 2026年4月 --format markdown
 
 # 从JSON文件读取数据
 python src/main.py --input data.json --output report.md
+
+# 启用联网搜集模式（需要API key）
+python src/main.py --industry 光伏 --period 2026年3月 --live --api-key YOUR_API_KEY
 ```
 
 ### 4. 运行测试
@@ -309,22 +318,25 @@ industry-report-workflow/
 ├── rules/
 │   ├── data_sources.json        # 数据源配置
 │   └── credibility_rules.json   # 可信度评估规则
-├── src/                         # Python代码（新增）
+├── src/                         # Python代码
 │   ├── data_models.py           # 数据模型
 │   ├── data_sources.py          # 数据源管理
+│   ├── collector.py             # 数据搜集模块（支持联网/演示）
 │   ├── validator.py             # 校验引擎
 │   ├── grader.py                # 分级引擎
 │   ├── pipeline.py              # 工作流Pipeline
 │   ├── report_generator.py      # 报告生成器
 │   └── main.py                  # CLI入口
-├── tests/                       # 测试代码（新增）
+├── tests/                       # 测试代码
 │   ├── conftest.py              # pytest配置
+│   ├── test_collector.py        # 搜集模块测试
 │   ├── test_validator.py        # 校验引擎测试
 │   ├── test_grader.py           # 分级引擎测试
 │   ├── test_pipeline.py         # Pipeline测试
 │   └── test_data_sources.py     # 数据源测试
-├── coze/                        # Coze工作流配置（新增）
+├── coze/                        # Coze工作流配置
 │   ├── workflow_design.md       # 工作流设计文档
+│   ├── workflow_setup_guide.md  # 工作流搭建详细步骤（新增）
 │   ├── workflow_config.json     # 工作流配置
 │   ├── workflow_nodes/          # 代码节点脚本
 │   │   ├── merge_data.py        # 数据合并
@@ -348,12 +360,14 @@ industry-report-workflow/
 
 1. **快速了解功能** → `README.md`（本文档）
 2. **理解数据模型** → `src/data_models.py`
-3. **理解校验逻辑** → `src/validator.py`
-4. **理解分级逻辑** → `src/grader.py`
-5. **理解整体流程** → `src/pipeline.py`
-6. **理解输出格式** → `src/report_generator.py`
-7. **查看测试覆盖** → `tests/`
-8. **了解Coze工作流** → `coze/workflow_design.md`
+3. **理解搜集逻辑** → `src/collector.py`
+4. **理解校验逻辑** → `src/validator.py`
+5. **理解分级逻辑** → `src/grader.py`
+6. **理解整体流程** → `src/pipeline.py`
+7. **理解输出格式** → `src/report_generator.py`
+8. **查看测试覆盖** → `tests/`
+9. **了解Coze工作流** → `coze/workflow_design.md`
+10. **搭建工作流** → `coze/workflow_setup_guide.md`
 
 ### 展示要点
 

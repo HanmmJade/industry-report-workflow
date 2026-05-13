@@ -89,6 +89,17 @@ def parse_args():
         help="显示详细输出"
     )
     
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="启用联网搜集模式（需配合--api-key使用）"
+    )
+    
+    parser.add_argument(
+        "--api-key",
+        help="搜索API密钥（如SerpAPI key）"
+    )
+    
     return parser.parse_args()
 
 
@@ -152,10 +163,22 @@ def run_cli_mode(args):
     if not period:
         period = datetime.now().strftime("%Y年%m月")
     
+    # 检查联网模式配置
+    live_mode = args.live
+    api_key = args.api_key
+    
+    if live_mode and not api_key:
+        print("[提示] 启用联网模式但未提供API key，将使用演示数据")
+        print("[提示] 如需真实联网搜集，请提供 --api-key 参数")
+        print()
+    
     print(f"参数：")
     print(f"  - 行业：{args.industry}")
     print(f"  - 周期：{period}")
     print(f"  - 数据类型：{', '.join(data_types)}")
+    print(f"  - 搜集模式：{'联网搜集' if live_mode else '演示数据'}")
+    if api_key:
+        print(f"  - API密钥：已配置")
     print()
     
     # 构建查询
@@ -165,7 +188,8 @@ def run_cli_mode(args):
     print()
     
     try:
-        pipeline = IndustryReportPipeline()
+        # 根据参数创建Pipeline实例
+        pipeline = IndustryReportPipeline(api_key=api_key, live_mode=live_mode)
         context = pipeline.run(query)
         
         print("✓ Pipeline执行成功！")
