@@ -1,0 +1,246 @@
+{
+  "workflow_name": "行业月报自动化工作流",
+  "workflow_description": "自动化搜集、校验、分级行业数据并生成报告",
+  "version": "1.0.0",
+  
+  "nodes": [
+    {
+      "id": "node_1",
+      "name": "开始",
+      "type": "start",
+      "description": "接收用户输入",
+      "inputs": [],
+      "outputs": [
+        {"name": "industry", "type": "string", "description": "行业名称"},
+        {"name": "time_period", "type": "string", "description": "数据周期"},
+        {"name": "data_types", "type": "array", "description": "数据类型数组"}
+      ],
+      "config": {
+        "default_industry": "光伏",
+        "default_time_period": "当前月份",
+        "default_data_types": ["domestic", "global", "competitor", "news"]
+      }
+    },
+    {
+      "id": "node_2",
+      "name": "国内数据搜集",
+      "type": "llm",
+      "description": "搜集国内行业数据",
+      "inputs": [
+        {"from": "node_1", "name": "industry"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "domestic_data", "type": "array", "description": "国内数据数组"}
+      ],
+      "prompt_file": "prompts/01_domestic_data.md",
+      "execution": "parallel",
+      "error_handling": {
+        "on_error": "use_empty_array",
+        "retry_count": 2
+      }
+    },
+    {
+      "id": "node_3",
+      "name": "国际数据搜集",
+      "type": "llm",
+      "description": "搜集国际行业数据",
+      "inputs": [
+        {"from": "node_1", "name": "industry"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "global_data", "type": "array", "description": "国际数据数组"}
+      ],
+      "prompt_file": "prompts/02_global_data.md",
+      "execution": "parallel",
+      "error_handling": {
+        "on_error": "use_empty_array",
+        "retry_count": 2
+      }
+    },
+    {
+      "id": "node_4",
+      "name": "竞对动态搜集",
+      "type": "llm",
+      "description": "搜集竞争对手动态",
+      "inputs": [
+        {"from": "node_1", "name": "industry"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "competitor_events", "type": "array", "description": "竞对动态数组"}
+      ],
+      "prompt_file": "prompts/03_competitor_dynamics.md",
+      "execution": "parallel",
+      "error_handling": {
+        "on_error": "use_empty_array",
+        "retry_count": 2
+      }
+    },
+    {
+      "id": "node_5",
+      "name": "行业资讯搜集",
+      "type": "llm",
+      "description": "搜集行业资讯",
+      "inputs": [
+        {"from": "node_1", "name": "industry"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "industry_news", "type": "array", "description": "行业资讯数组"}
+      ],
+      "prompt_file": "prompts/04_industry_news.md",
+      "execution": "parallel",
+      "error_handling": {
+        "on_error": "use_empty_array",
+        "retry_count": 2
+      }
+    },
+    {
+      "id": "node_6",
+      "name": "数据合并与标准化",
+      "type": "code",
+      "description": "合并4个数据源，统一格式，生成ID",
+      "inputs": [
+        {"from": "node_2", "name": "domestic_data"},
+        {"from": "node_3", "name": "global_data"},
+        {"from": "node_4", "name": "competitor_events"},
+        {"from": "node_5", "name": "industry_news"}
+      ],
+      "outputs": [
+        {"name": "all_data", "type": "array", "description": "合并后数据"},
+        {"name": "summary", "type": "object", "description": "统计摘要"}
+      ],
+      "code_file": "coze/workflow_nodes/merge_data.py",
+      "execution": "after_parallel",
+      "error_handling": {
+        "on_error": "use_original_data"
+      }
+    },
+    {
+      "id": "node_7",
+      "name": "校验引擎",
+      "type": "code",
+      "description": "时间一致性、预测值标注、数据冲突检测",
+      "inputs": [
+        {"from": "node_6", "name": "all_data"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "validation_results", "type": "array", "description": "校验结果"},
+        {"name": "validation_stats", "type": "object", "description": "校验统计"}
+      ],
+      "code_file": "coze/workflow_nodes/validate.py",
+      "error_handling": {
+        "on_error": "mark_all_unchecked"
+      }
+    },
+    {
+      "id": "node_8",
+      "name": "可信度分级",
+      "type": "code",
+      "description": "根据规则执行A/B/C/D评级",
+      "inputs": [
+        {"from": "node_6", "name": "all_data"},
+        {"from": "node_7", "name": "validation_results"}
+      ],
+      "outputs": [
+        {"name": "grading_results", "type": "array", "description": "评级结果"},
+        {"name": "grading_stats", "type": "object", "description": "评级统计"}
+      ],
+      "code_file": "coze/workflow_nodes/grade.py",
+      "rules_file": "rules/credibility_rules.json",
+      "error_handling": {
+        "on_error": "default_to_c"
+      }
+    },
+    {
+      "id": "node_9",
+      "name": "报告生成",
+      "type": "llm",
+      "description": "根据结构化数据生成Markdown报告",
+      "inputs": [
+        {"from": "node_6", "name": "all_data"},
+        {"from": "node_7", "name": "validation_results"},
+        {"from": "node_7", "name": "validation_stats"},
+        {"from": "node_8", "name": "grading_results"},
+        {"from": "node_8", "name": "grading_stats"},
+        {"from": "node_1", "name": "time_period"}
+      ],
+      "outputs": [
+        {"name": "report_content", "type": "string", "description": "Markdown报告"}
+      ],
+      "error_handling": {
+        "on_error": "generate_simple_report"
+      }
+    },
+    {
+      "id": "node_10",
+      "name": "结束",
+      "type": "end",
+      "description": "输出最终报告",
+      "inputs": [
+        {"from": "node_9", "name": "report_content"},
+        {"from": "node_8", "name": "grading_stats"}
+      ],
+      "outputs": [
+        {"name": "final_report", "type": "string", "description": "最终报告"},
+        {"name": "stats", "type": "object", "description": "统计信息"}
+      ]
+    }
+  ],
+  
+  "connections": [
+    {
+      "from": "node_1",
+      "to": ["node_2", "node_3", "node_4", "node_5"],
+      "type": "direct"
+    },
+    {
+      "from": ["node_2", "node_3", "node_4", "node_5"],
+      "to": "node_6",
+      "type": "parallel_join"
+    },
+    {
+      "from": "node_6",
+      "to": "node_7",
+      "type": "direct"
+    },
+    {
+      "from": "node_7",
+      "to": "node_8",
+      "type": "direct"
+    },
+    {
+      "from": "node_8",
+      "to": "node_9",
+      "type": "direct"
+    },
+    {
+      "from": "node_9",
+      "to": "node_10",
+      "type": "direct"
+    }
+  ],
+  
+  "parallel_groups": [
+    {
+      "name": "data_collection",
+      "nodes": ["node_2", "node_3", "node_4", "node_5"],
+      "join": "node_6"
+    }
+  ],
+  
+  "variables": {
+    "global": [],
+    "node_outputs": {}
+  },
+  
+  "settings": {
+    "timeout_seconds": 300,
+    "retry_on_error": true,
+    "max_retries": 2,
+    "log_level": "info"
+  }
+}

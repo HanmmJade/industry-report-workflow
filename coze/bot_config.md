@@ -4,9 +4,54 @@
 
 ---
 
-## 一、Bot 功能概述
+## 一、工作流模式搭建指南（推荐）
 
-### 1.1 核心功能
+> **重要更新**：强烈推荐使用工作流模式（Workflow）而非单Agent模式。
+> 工作流模式具有更强的可维护性、可扩展性和执行确定性。
+
+### 1.1 为什么选择工作流模式？
+
+| 维度 | 单Agent模式 | 工作流模式 |
+|------|------------|-----------|
+| **架构** | 一个Bot + 多段Prompt | 10节点串联 |
+| **数据流** | 全靠Prompt传递 | 显式节点间传递 |
+| **代码执行** | 无 | 代码节点可执行Python |
+| **规则执行** | 依赖LLM理解 | 规则引擎执行 |
+| **调试** | 难以定位问题 | 节点级调试 |
+| **扩展性** | 需改Prompt | 增删节点即可 |
+
+### 1.2 工作流节点速览
+
+```
+节点1（开始）：用户输入行业/时间
+     ↓ 并行
+节点2-5（LLM）：国内/国际/竞对/资讯搜集
+     ↓ 串行
+节点6（代码）：数据合并与标准化
+节点7（代码）：校验引擎
+节点8（代码）：可信度分级
+节点9（LLM）：报告生成
+     ↓
+节点10（结束）：输出报告
+```
+
+### 1.3 快速搭建步骤
+
+1. **创建工作流**：在Coze工作流编辑器中创建新工作流
+2. **配置节点**：按 `coze/workflow_config.json` 添加10个节点
+3. **导入代码**：将 `coze/workflow_nodes/` 中的代码粘贴到对应代码节点
+4. **连接节点**：按配置连接各节点
+5. **测试运行**：使用示例数据测试
+
+详细设计文档：[workflow_design.md](workflow_design.md)
+
+---
+
+## 二、单Agent模式配置（备选）
+
+> 如果无法使用工作流模式，可采用单Agent模式。
+
+### 2.1 Bot 功能概述
 
 | 功能 | 说明 |
 |------|------|
@@ -16,7 +61,7 @@
 | **可信度评估** | 按照A/B/C/D标准评估数据可信度 |
 | **报告自动生成** | 输出符合标准格式的行业月报 |
 
-### 1.2 Bot 命名建议
+### 2.2 Bot 命名建议
 
 ```
 推荐名称：
@@ -30,28 +75,9 @@ Bot简介：
 
 ---
 
-## 二、工作流设计
+## 三、工作流节点配置（工作流模式）
 
-### 2.1 工作流结构
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      工作流概览                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  [用户输入] → [数据搜集] → [数据校验] → [可信度评估] → [报告生成]  │
-│      ↓           ↓              ↓              ↓           ↓     │
-│   行业/时间   国内数据       时间一致性    来源权威性    Markdown   │
-│   选择       国际数据       预测值区分    交叉验证      Excel      │
-│              竞争对手       数据冲突检测  综合定级      JSON       │
-│              行业资讯                                        │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 节点配置
-
-#### 节点1：用户输入处理
+### 3.1 节点1：用户输入处理
 
 ```yaml
 节点名称：用户输入处理
@@ -60,7 +86,7 @@ Bot简介：
 输入参数：
   - industry: string      # 行业（光伏/锂电/新能源汽车/激光）
   - time_period: string   # 时间范围（2026年3月/2026Q1）
-  - data_type: string[]  # 数据类型（可多选）
+  - data_type: string[]  # 数据类型
                           # - domestic: 国内数据
                           # - global: 国际数据
                           # - competitor: 竞争对手动态
@@ -70,154 +96,112 @@ Bot简介：
   - industry
   - time_period
   - data_type
-  - processing_plan
 ```
 
-#### 节点2：数据搜集
+### 3.2 节点2-5：数据搜集（LLM节点，并行）
 
 ```yaml
-节点名称：数据搜集引擎
+节点名称：国内/国际/竞对/资讯数据搜集
 节点类型：LLM节点
+模型选择：Claude 3.5 / GPT-4o
+Temperature: 0.3
 
-模型选择：推荐使用 Claude 3.5 / GPT-4o
-Temperature: 0.3  # 较低随机性，保证数据准确性
+输入参数：
+  - industry: 来自节点1
+  - time_period: 来自节点1
 
-系统Prompt：
----
-你是一个专业的行业数据分析师。请根据用户输入的参数，搜集相关行业数据。
-
-数据搜集规则：
-1. 优先使用官方来源（政府、行业协会、交易所）
-2. 注明数据发布时间
-3. 区分预测值和实际值
-4. 提供可访问的URL
-
-输入参数：{industry}, {time_period}, {data_type}
-
-请调用相应的Prompt模板进行数据搜集：
-- 国内数据 → prompts/01_domestic_data.md
-- 国际数据 → prompts/02_global_data.md
-- 竞争对手动态 → prompts/03_competitor_dynamics.md
-- 行业资讯 → prompts/04_industry_news.md
----
-
-输出参数：
-  - raw_data: object  # 原始数据集合
-  - data_count: number # 数据条目数
-  - missing_sources: string[] # 未找到的数据源
+代码文件：coze/workflow_nodes/merge_data.py
 ```
 
-#### 节点3：数据校验
+### 3.3 节点6：数据合并（代码节点）
+
+```yaml
+节点名称：数据合并与标准化
+节点类型：代码节点
+代码文件：coze/workflow_nodes/merge_data.py
+
+输入参数：
+  - domestic_data: 来自节点2
+  - global_data: 来自节点3
+  - competitor_events: 来自节点4
+  - industry_news: 来自节点5
+
+输出参数：
+  - all_data: 合并后数据数组
+  - summary: 统计摘要
+```
+
+### 3.4 节点7：校验引擎（代码节点）
 
 ```yaml
 节点名称：数据校验引擎
-节点类型：LLM节点 / 代码节点
+节点类型：代码节点
+代码文件：coze/workflow_nodes/validate.py
+
+输入参数：
+  - all_data: 来自节点6
+  - time_period: 来自节点1
 
 校验规则：
   - 时间一致性检查
-  - 预测值/实际值区分
+  - 预测值标注检测
   - 数据冲突检测
-  - URL可访问性检查
-
-代码示例（Python）：
-```python
-def validate_data(raw_data):
-    validated_data = []
-    issues = []
-    
-    for item in raw_data:
-        # 时间一致性检查
-        if not check_time_consistency(item):
-            item['warning'] = '⚠️时间异常'
-            issues.append(f"时间问题: {item['indicator']}")
-        
-        # 预测值检测
-        if is_forecast(item) and not item.get('forecast_flag'):
-            item['forecast_flag'] = True
-            item['warning'] = '⚠️已标注为预测值'
-        
-        validated_data.append(item)
-    
-    return validated_data, issues
-```
 
 输出参数：
-  - validated_data: object  # 校验后的数据
-  - issues: string[]        # 发现的问题
-  - issue_count: number      # 问题数量
+  - validation_results: 校验结果数组
+  - validation_stats: 统计信息
 ```
 
-#### 节点4：可信度评估
+### 3.5 节点8：可信度分级（代码节点）
 
 ```yaml
-节点名称：可信度评估引擎
-节点类型：LLM节点
+节点名称：可信度分级引擎
+节点类型：代码节点
+代码文件：coze/workflow_nodes/grade.py
 
-评估规则：参考 rules/credibility_rules.json
-
-Prompt模板：
----
-请对以下数据进行可信度评估，按照A/B/C/D四级标准评级。
-
-评级标准：
-- A级：官方来源 + 至少一个第三方交叉验证
-- B级：权威机构单来源
-- C级：行业媒体单来源
-- D级：来源不明或数据冲突
-
-请输出：
-1. 每个数据项的评级
-2. 评级理由
-3. 如需调整评级，说明原因
-
-数据：{validated_data}
----
+输入参数：
+  - all_data: 来自节点6
+  - validation_results: 来自节点7
 
 输出参数：
-  - graded_data: object   # 带可信度标注的数据
-  - grade_distribution: object  # 各级别分布统计
-  - upgrade_notes: string[]    # 升级说明
-  - degrade_notes: string[]    # 降级说明
+  - grading_results: 评级结果数组
+  - grading_stats: 统计分布
 ```
 
-#### 节点5：报告生成
+### 3.6 节点9：报告生成（LLM节点）
 
 ```yaml
-节点名称：报告生成器
+节点名称：报告生成
 节点类型：LLM节点
+代码文件：coze/workflow_nodes/format_output.py
 
-输出格式：Markdown
-
-Prompt模板：
----
-请将以下经过校验和评估的数据整理成行业月报格式。
-
-报告结构：
-1. 数据汇总表（带可信度标注）
-2. 可信度统计（各级别占比）
-3. 重点关注项
-4. 待验证项
-5. 数据质量说明
-
-数据：{graded_data}
-
-格式要求：
-- 使用Markdown表格
-- 关键数据用**粗体**标注
-- 问题数据用⚠️标注
-- 提供可访问的URL
----
+输入参数：
+  - all_data: 来自节点6
+  - validation_results: 来自节点7
+  - grading_results: 来自节点8
+  - grading_stats: 来自节点8
+  - time_period: 来自节点1
 
 输出参数：
-  - report: string        # Markdown格式报告
-  - summary_stats: object # 汇总统计
+  - report_content: Markdown报告
+```
+
+### 3.7 节点10：结束
+
+```yaml
+节点名称：结束
+节点类型：结束节点
+
+输出：
+  - final_report: 最终报告
+  - stats: 统计信息
 ```
 
 ---
 
-## 三、完整工作流配置示例
+## 四、完整工作流配置示例
 
-### 3.1 工作流 YAML 配置
+### 4.1 工作流 YAML 配置
 
 ```yaml
 name: industry-report-workflow
@@ -287,7 +271,7 @@ nodes:
       - report: report.report
 ```
 
-### 3.2 触发方式
+### 4.2 触发方式
 
 | 方式 | 配置 | 说明 |
 |------|------|------|
@@ -297,9 +281,9 @@ nodes:
 
 ---
 
-## 四、发布指引
+## 五、发布指引
 
-### 4.1 Bot 发布设置
+### 5.1 Bot 发布设置
 
 ```yaml
 基础信息：
@@ -318,7 +302,7 @@ nodes:
   - 记忆功能：开启（记录用户偏好）
 ```
 
-### 4.2 发布渠道
+### 5.2 发布渠道
 
 | 渠道 | 适用场景 | 配置 |
 |------|----------|------|
@@ -327,7 +311,7 @@ nodes:
 | 企业微信 | 企业内部协作 | 配置企业微信应用 |
 | 钉钉 | 企业内部协作 | 配置钉钉机器人 |
 
-### 4.3 权限设置
+### 5.3 权限设置
 
 ```yaml
 访问权限：
@@ -342,9 +326,9 @@ nodes:
 
 ---
 
-## 五、使用示例
+## 六、使用示例
 
-### 5.1 用户对话示例
+### 6.1 用户对话示例
 
 ```
 用户：
@@ -374,7 +358,7 @@ Bot：
 - InfoLink：https://infolink.com/...
 ```
 
-### 5.2 输出质量控制
+### 6.2 输出质量控制
 
 ```yaml
 输出质量检查清单：
@@ -393,7 +377,7 @@ Bot：
 
 ---
 
-## 六、常见问题
+## 七、常见问题
 
 ### Q1: 如何处理数据源缺失？
 
@@ -425,3 +409,31 @@ A：提高A级数据占比的方法：
 4. 及时更新失效链接
 5. 对低可信度数据持续跟踪验证
 ```
+
+### Q4: 工作流模式和单Agent模式如何选择？
+
+```markdown
+A：推荐使用工作流模式的场景：
+1. 需要代码节点执行规则引擎
+2. 多个数据源需要并行搜集
+3. 需要明确的阶段间数据传递
+4. 需要节点级调试能力
+
+可使用单Agent模式的场景：
+1. 快速原型验证
+2. 简单场景不需要复杂流程
+3. 团队对Prompt工程更熟悉
+```
+
+---
+
+## 八、相关文档
+
+| 文档 | 说明 |
+|------|------|
+| [workflow_design.md](workflow_design.md) | 工作流设计详细文档 |
+| [workflow_config.json](workflow_config.json) | 工作流配置文件 |
+| [system-prompt.md](system-prompt.md) | System Prompt模板 |
+| [../prompts/01_domestic_data.md](../prompts/01_domestic_data.md) | 国内数据搜集Prompt |
+| [../rules/credibility_rules.json](../rules/credibility_rules.json) | 可信度评估规则 |
+| [../rules/data_sources.json](../rules/data_sources.json) | 数据源配置 |

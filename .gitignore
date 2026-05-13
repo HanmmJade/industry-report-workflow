@@ -42,3 +42,4 @@ raw_data/
 .env
 .env.local
 SECRET.md
+# Coverage data\nhtmlcov/\n.coverage\n__pycache__/\n*.pyc\n.pytest_cache/\n\n# Generated reports (keep example only)\noutput/report_*.md\n!output/example_output.md
